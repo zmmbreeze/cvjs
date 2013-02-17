@@ -1,38 +1,9 @@
 /*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
-/*global cv:true */
+/*global cv:true, CVColor:true */
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------
 // cv.Image
-// ----------------------------------------------------------------------------
-
-(function() {
-
-/**
- * load image form url
- *
- * @param {string} url image url
- * @param {Function} callback function(img) {}
- */
- function loadFromUrl(url, callback) {
-    var img = new Image();
-    img.src = url;
-
-    // 命中缓存
-    if (img.complete) {
-        callback(img);
-        img = null;
-        return;
-    }
-
-    img.onload = function () {
-        callback(img);
-        img = null;
-    };
-    img.onabort = img.onerror = function() {
-        img = null;
-        callback();
-    };
-}
+// -----------------------------------------------------------------------
 
 /**
  * @class cv.Image
@@ -41,7 +12,7 @@
 var CVImage = cv.Image = function(src) {
     var me = this;
     if (typeof src === 'string') {
-        loadFromUrl(src, function(img) {
+        CVImage.loadFromUrl(src, function(img) {
             var cvImg = new CVImage(img);
             me.imageData = cvImg.imageData;
             me._doLoadCallback();
@@ -72,7 +43,7 @@ var CVImage = cv.Image = function(src) {
             throw new Error('[cv.Image] src wasn\'t supported!');
         }
         me.imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-        me._doLoadCallback();
+        me._loaded = true;
     }
 };
 
@@ -98,6 +69,33 @@ CVImage.loadFromUrls = function(urls, callback) {
     for (i=0, l=urls.length; i<l; i++) {
         this.loadFromUrl(urls[i], cb);
     }
+};
+
+/**
+ * load image form url
+ *
+ * @param {string} url image url
+ * @param {Function} callback function(img) {}
+ */
+CVImage.loadFromUrl = function(url, callback) {
+    var img = new Image();
+    img.src = url;
+
+    // 命中缓存
+    if (img.complete) {
+        callback(img);
+        img = null;
+        return;
+    }
+
+    img.onload = function () {
+        callback(img);
+        img = null;
+    };
+    img.onabort = img.onerror = function() {
+        img = null;
+        callback();
+    };
 };
 
 /**
@@ -132,6 +130,77 @@ CVImage.prototype._doLoadCallback = function() {
 };
 
 /**
+ * get data
+ *
+ * @return {Uint8ClampedArray} data
+ */
+CVImage.prototype.getData = function() {
+    return this.imageData.data;
+};
+
+/**
+ * get width of image
+ *
+ * @return {Number} width
+ */
+CVImage.prototype.getWidth = function() {
+    return this.imageData.width;
+};
+
+/**
+ * get height of image
+ *
+ * @return {Number} height
+ */
+CVImage.prototype.getHeight = function() {
+    return this.imageData.height;
+};
+
+/**
+ * get CVColor by row and column
+ *
+ * @param {number} row
+ * @param {number} column
+ * @return {Object} color
+ */
+CVImage.prototype.getColor = function(row, column) {
+    var data = this.imageData.data,
+        i = row*(this.imageData.width*4) + column*4;
+    return new CVColor(data[i], data[i+1], data[i+2], data[i+3]);
+};
+
+/**
+ * get length of pixel
+ *
+ * @return {number}
+ */
+CVImage.prototype.getLength = function() {
+    return this.imageData.data.length;
+};
+
+/**
+ * map for pixel
+ *
+ * @param {Function} func function(CVColor){}
+ * @return {Object} this
+ */
+CVImage.prototype.map = function(func) {
+    var i, l, color, newColor,
+        data = this.imageData.data;
+    for (i=0, l=data.length; i<l; i=i+4) {
+        color = new CVColor(data[i], data[i+1], data[i+2], data[i+3]);
+        newColor = func.call(null, color);
+        if (newColor) {
+            data[i] = newColor.r;
+            data[i+1] = newColor.g;
+            data[i+2] = newColor.b;
+            data[i+3] = newColor.a;
+        }
+    }
+    return this;
+};
+
+/**
  * rend cvImage to html
  *
  * @param {Object} el container element or canvas
@@ -151,5 +220,3 @@ CVImage.prototype.rendTo = function(el) {
     ctx.putImageData(this.imageData, 0, 0);
     return this;
 };
-
-})();
