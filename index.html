@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>cvjs</title>
+  <script src="src/cv.js"></script>
+  <script src="src/cvImage.js"></script>
+</head>
+<body>
+    <div id="stage"></div>
+    <script>
+        var cvImg = new cv.Image('./assets/demo.jpg');
+        var stage = document.getElementById('stage');
+        cvImg.onload(function() {
+            this.rendTo(stage);
+        });
+    </script>
+</body>
+</html>
