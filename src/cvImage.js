@@ -17,7 +17,7 @@ var CVImage = cv.Image = function(src) {
             me.imageData = cvImg.imageData;
             me._doLoadCallback();
         });
-    } else {
+    } else if (typeof src !== 'undefined') {
         var cvs, ctx;
         if (src.nodeName) {
             var name = src.nodeName.toLowerCase();
@@ -45,6 +45,30 @@ var CVImage = cv.Image = function(src) {
         me.imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
         me._loaded = true;
     }
+    // create empty object for clone method
+};
+
+/**
+ * clone a new CVImage
+ *
+ * @return {CVImage} new image
+ */
+CVImage.prototype.clone = function() {
+    var ctx = document.createElement('canvas').getContext('2d'),
+        imageData = this.imageData,
+        newImageData,
+        newCVImage;
+
+    // clone imageData
+    newImageData = ctx.createImageData(imageData.width, imageData.height);
+    newImageData.data.set(imageData.data);
+
+    // init CVImage
+    newCVImage = new CVImage(); // create empty object
+    newCVImage.imageData = newImageData;
+    newCVImage._loaded = true;
+
+    return newCVImage;
 };
 
 /**
@@ -102,7 +126,7 @@ CVImage.loadFromUrl = function(url, callback) {
  * bind callback on img loaded
  *
  * @param {Function} cb function(me){me === this;};
- * @return {Object} this
+ * @return {CVImage} this
  */
 CVImage.prototype.onload = function(cb) {
     if (this._loaded) {
@@ -161,7 +185,7 @@ CVImage.prototype.getHeight = function() {
  *
  * @param {number} row
  * @param {number} column
- * @return {Object} color
+ * @return {CVColor} color
  */
 CVImage.prototype.getColor = function(row, column) {
     var data = this.imageData.data,
@@ -179,17 +203,35 @@ CVImage.prototype.getLength = function() {
 };
 
 /**
- * map for pixel
+ * each for pixel
  *
- * @param {Function} func function(CVColor){}
- * @return {Object} this
+ * @param {Function} func function(CVColor, row, column, i){}
+ * @return {CVImage} this
  */
-CVImage.prototype.map = function(func) {
-    var i, l, color, newColor,
-        data = this.imageData.data;
+CVImage.prototype.each = function(func) {
+    var i, l, color, column, row,
+        data = this.imageData.data,
+        rowLength = this.imageData.width*4;
     for (i=0, l=data.length; i<l; i=i+4) {
         color = new CVColor(data[i], data[i+1], data[i+2], data[i+3]);
-        newColor = func.call(null, color);
+        func.call(null, color, Math.floor(i/rowLength), i%rowLength, i);
+    }
+    return this;
+};
+
+/**
+ * map for pixel
+ *
+ * @param {Function} func function(CVColor, row, column, i){}
+ * @return {CVImage} this
+ */
+CVImage.prototype.map = function(func) {
+    var i, l, color, newColor, column, row,
+        data = this.imageData.data,
+        rowLength = this.imageData.width*4;
+    for (i=0, l=data.length; i<l; i=i+4) {
+        color = new CVColor(data[i], data[i+1], data[i+2], data[i+3]);
+        newColor = func.call(null, color, Math.floor(i/rowLength), i%rowLength, i);
         if (newColor) {
             data[i] = newColor.r;
             data[i+1] = newColor.g;
@@ -204,7 +246,7 @@ CVImage.prototype.map = function(func) {
  * rend cvImage to html
  *
  * @param {Object} el container element or canvas
- * @return {Object} this
+ * @return {CVImage} this
  */
 CVImage.prototype.rendTo = function(el) {
     var cvs, ctx;

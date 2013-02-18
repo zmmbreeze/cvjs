@@ -6,14 +6,27 @@
   <script src="src/cv.js"></script>
   <script src="src/cvColor.js"></script>
   <script src="src/cvImage.js"></script>
+  <script src="src/cvImage.grayscale.js"></script>
+  <script src="src/cvImage.desaturate.js"></script>
 </head>
 <body>
     <div id="stage"></div>
     <script>
         var cvImg = new cv.Image('./assets/demo.jpg');
         var stage = document.getElementById('stage');
+        function newCanvas() {
+            var div = document.createElement('div');
+            stage.appendChild(div);
+            return div;
+        }
         cvImg.onload(function() {
-            this.rendTo(stage);
+            this.clone()
+                .grayscale()
+                .rendTo(newCanvas());
+            this.clone()
+                .desaturate()
+                .rendTo(newCanvas());
+            this.rendTo(newCanvas());
         });
     </script>
 </body>
