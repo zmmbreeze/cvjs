@@ -1,4 +1,4 @@
-/*jshint undef:true, browser:true, noarg:true, curly:true, regexp:true, newcap:true, trailing:true, noempty:true, regexp:false, funcscope:true, iterator:true, loopfunc:true, multistr:true, boss:true, eqnull:true, eqeqeq:true, undef:true */
+/*jshint undef:true, multistr:true, boss:true, eqnull:true, eqeqeq:true */
 /*global cv:true, CVColor:true, CVImage:true */
 
 // -----------------------------------------------------------------------
@@ -9,14 +9,14 @@
 /**
  * gray scale
  *
- * @return {CVImage} this
+ * @return {CVImage} this.
  */
 CVImage.prototype.grayscale = function() {
     this.map(function(cvColor, row, column) {
         var mono = Math.floor(
-            (0.2125 * cvColor.r)
-            + (0.7154 * cvColor.g)
-            + (0.0721 * cvColor.b)
+            (0.2125 * cvColor.r) +
+            (0.7154 * cvColor.g) +
+            (0.0721 * cvColor.b)
         );
         return new CVColor(
             mono,
@@ -27,3 +27,5 @@ CVImage.prototype.grayscale = function() {
     });
     return this;
 };
+
+
