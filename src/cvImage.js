@@ -3,6 +3,17 @@
 
 // -----------------------------------------------------------------------
 // cv.Image
+//  row, column params start with 0.
+//
+// example:
+//  var img = new cv.Image('http://url.com/l.gif'),
+//      img2 = new cv.Image(document.getElementsByTag('canvas')[0]),
+//      img3 = new cv.Image(context),
+//      img4 = new cv.Image(document.getElementsByTag('img')[0]),
+//      img5 = cv.Image.createEmptyImage(100, 100),
+//  cv.Image.loadFromUrls(['url1', 'url2'], function(cvImgs) {
+//      // do something
+//  });
 // -----------------------------------------------------------------------
 
 /**
@@ -13,9 +24,9 @@
 var CVImage = cv.Image = function(src) {
     var me = this;
     if (typeof src === 'string') {
-        CVImage.loadFromUrl(src, function(img) {
+        CVImage._loadFromUrl(src, function(img) {
             var cvImg = new CVImage(img);
-            me.imageData = cvImg.imageData;
+            me._imageData = cvImg._imageData;
             me._doLoadCallback();
         });
     } else if (typeof src !== 'undefined') {
@@ -43,7 +54,7 @@ var CVImage = cv.Image = function(src) {
         } else {
             throw new Error('[cv.Image] src wasn\'t supported!');
         }
-        me.imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+        me._imageData = ctx.getImageData(0, 0, cvs.width, cvs.height);
         me._loaded = true;
     }
     // create empty object for clone method
@@ -56,17 +67,17 @@ var CVImage = cv.Image = function(src) {
  */
 CVImage.prototype.clone = function() {
     var ctx = document.createElement('canvas').getContext('2d'),
-        imageData = this.imageData,
+        _imageData = this._imageData,
         newImageData,
         newCVImage;
 
-    // clone imageData
-    newImageData = ctx.createImageData(imageData.width, imageData.height);
-    newImageData.data.set(imageData.data);
+    // clone _imageData
+    newImageData = ctx.createImageData(_imageData.width, _imageData.height);
+    newImageData.data.set(_imageData.data);
 
     // init CVImage
     newCVImage = new CVImage(); // create empty object
-    newCVImage.imageData = newImageData;
+    newCVImage._imageData = newImageData;
     newCVImage._loaded = true;
 
     return newCVImage;
@@ -93,7 +104,7 @@ CVImage.loadFromUrls = function(urls, callback) {
             }
         };
     for (i = 0, l = urls.length; i < l; i++) {
-        this.loadFromUrl(urls[i], cb);
+        this._loadFromUrl(urls[i], cb);
     }
 };
 
@@ -104,7 +115,7 @@ CVImage.loadFromUrls = function(urls, callback) {
  * @param {string} url image url.
  * @param {Function} callback function(img) {}.
  */
-CVImage.loadFromUrl = function(url, callback) {
+CVImage._loadFromUrl = function(url, callback) {
     var img = new Image();
     img.src = url;
 
@@ -123,6 +134,24 @@ CVImage.loadFromUrl = function(url, callback) {
         img = null;
         callback();
     };
+};
+
+
+/**
+ * Create an empty cvImage
+ *
+ * @param {number} width width of new image.
+ * @param {number} height height of new image.
+ * @return {CVImage} new image.
+ */
+CVImage.createEmptyImage = function(width, height) {
+    var cvs, ctx,
+        cvImage = new CVImage();
+    cvs = document.createElement('canvas');
+    ctx = cvs.getContext('2d');
+    cvImage._imageData = ctx.createImageData(width, height);
+    cvImage._loaded = true;
+    return cvImage;
 };
 
 /**
@@ -162,7 +191,7 @@ CVImage.prototype._doLoadCallback = function() {
  * @return {Uint8ClampedArray} data.
  */
 CVImage.prototype.getData = function() {
-    return this.imageData.data;
+    return this._imageData.data;
 };
 
 /**
@@ -171,7 +200,7 @@ CVImage.prototype.getData = function() {
  * @return {Number} width.
  */
 CVImage.prototype.getWidth = function() {
-    return this.imageData.width;
+    return this._imageData.width;
 };
 
 /**
@@ -180,7 +209,7 @@ CVImage.prototype.getWidth = function() {
  * @return {Number} height.
  */
 CVImage.prototype.getHeight = function() {
-    return this.imageData.height;
+    return this._imageData.height;
 };
 
 /**
@@ -191,8 +220,8 @@ CVImage.prototype.getHeight = function() {
  * @return {CVColor} color.
  */
 CVImage.prototype.getColor = function(row, column) {
-    var data = this.imageData.data,
-        i = row * (this.imageData.width * 4) + column * 4;
+    var data = this._imageData.data,
+        i = row * (this._imageData.width * 4) + column * 4;
     return new CVColor(data[i], data[i + 1], data[i + 2], data[i + 3]);
 };
 
@@ -205,8 +234,8 @@ CVImage.prototype.getColor = function(row, column) {
  * @return {CVColor} color.
  */
 CVImage.prototype.setColor = function(color, row, column) {
-    var data = this.imageData.data,
-        i = row * (this.imageData.width * 4) + column * 4;
+    var data = this._imageData.data,
+        i = row * (this._imageData.width * 4) + column * 4;
     data[i] = color.r;
     data[i + 1] = color.g;
     data[i + 2] = color.b;
@@ -220,7 +249,7 @@ CVImage.prototype.setColor = function(color, row, column) {
  * @return {number} length of image pixels.
  */
 CVImage.prototype.getLength = function() {
-    return this.imageData.data.length;
+    return this._imageData.data.length;
 };
 
 /**
@@ -231,11 +260,17 @@ CVImage.prototype.getLength = function() {
  */
 CVImage.prototype.each = function(func) {
     var i, l, color, column, row,
-        data = this.imageData.data,
-        rowLength = this.imageData.width * 4;
+        data = this._imageData.data,
+        rowLength = this._imageData.width * 4;
     for (i = 0, l = data.length; i < l; i = i + 4) {
         color = new CVColor(data[i], data[i + 1], data[i + 2], data[i + 3]);
-        func.call(null, color, Math.floor(i / rowLength), i % rowLength, i);
+        func.call(
+            null,
+            color,
+            Math.floor(i / rowLength),
+            (i % rowLength) / 4,
+            i
+        );
     }
     return this;
 };
@@ -248,15 +283,15 @@ CVImage.prototype.each = function(func) {
  */
 CVImage.prototype.map = function(func) {
     var i, l, color, newColor, column, row,
-        data = this.imageData.data,
-        rowLength = this.imageData.width * 4;
+        data = this._imageData.data,
+        rowLength = this._imageData.width * 4;
     for (i = 0, l = data.length; i < l; i = i + 4) {
         color = new CVColor(data[i], data[i + 1], data[i + 2], data[i + 3]);
         newColor = func.call(
             null,
             color,
             Math.floor(i / rowLength),
-            i % rowLength,
+            (i % rowLength) / 4,
             i
         );
         if (newColor) {
@@ -277,15 +312,19 @@ CVImage.prototype.map = function(func) {
  */
 CVImage.prototype.rendTo = function(el) {
     var cvs, ctx;
+    if (typeof el === 'string') {
+        el = document.getElementById(el);
+    }
+
     if (el.nodeName.toLowerCase() !== 'canvas') {
         cvs = document.createElement('canvas');
         el.appendChild(cvs);
     } else {
         cvs = el;
     }
-    cvs.width = this.imageData.width;
-    cvs.height = this.imageData.height;
+    cvs.width = this._imageData.width;
+    cvs.height = this._imageData.height;
     ctx = cvs.getContext('2d');
-    ctx.putImageData(this.imageData, 0, 0);
+    ctx.putImageData(this._imageData, 0, 0);
     return this;
 };

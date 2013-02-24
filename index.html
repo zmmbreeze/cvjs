@@ -8,11 +8,12 @@
   <script src="src/cvImage.js"></script>
   <script src="src/cvImage.grayscale.js"></script>
   <script src="src/cvImage.desaturate.js"></script>
+  <script src="src/cvImage.scale.js"></script>
 </head>
 <body>
     <div id="stage"></div>
     <script>
-        var cvImg = new cv.Image('./assets/demo.jpg');
+        var cvImg = new cv.Image('./assets/scaling.png');
         var stage = document.getElementById('stage');
         function newCanvas() {
             var div = document.createElement('div');
@@ -20,6 +21,7 @@
             return div;
         }
         cvImg.onload(function() {
+            /*
             this.clone()
                 .grayscale()
                 .rendTo(newCanvas());
@@ -27,7 +29,24 @@
                 .desaturate()
                 .rendTo(newCanvas());
             this.rendTo(newCanvas());
+            */
+            this.rendTo(newCanvas())
+                .scale(200)
+                .rendTo(newCanvas());
+            this.scale(200, null, 'nearest')
+                .rendTo(newCanvas());
         });
+
+        var eImg = cv.Image.createEmptyImage(10, 10);
+        eImg.map(function(color, row, column) {
+            console.log(row, column);
+            if ((row < 5 && column < 5) ||
+                (row >= 5 && column >= 5)) {
+                return {r: 0, g:0, b: 0, a: 255};
+            } else {
+                return {r: 255, g:255, b: 255, a: 255};
+            }
+        }).rendTo(newCanvas());
     </script>
 </body>
 </html>
