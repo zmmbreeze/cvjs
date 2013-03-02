@@ -1,0 +1,9 @@
+#stage div {
+    float: left;
+    _display: inline;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #CCC;
+    box-shadow: 1px 1px 5px #CCC;
+}

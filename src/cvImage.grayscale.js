@@ -1,4 +1,3 @@
-/*jshint undef:true, multistr:true, boss:true, eqnull:true, eqeqeq:true */
 /*global cv:true, CVColor:true, CVImage:true */
 
 // -----------------------------------------------------------------------
@@ -27,4 +26,20 @@ CVImage.prototype.grayscale = function() {
     return this;
 };
 
-
+/**
+ * desaturate
+ *
+ * @return {cvimage} this.
+ */
+CVImage.prototype.desaturate = function() {
+    this.map(function(cvColor, row, column) {
+        var average = (cvColor.r + cvColor.g + cvColor.b) / 3;
+        return new CVColor(
+            average,
+            average,
+            average,
+            cvColor.a
+        );
+    });
+    return this;
+};

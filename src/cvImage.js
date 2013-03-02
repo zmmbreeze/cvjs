@@ -20,12 +20,18 @@
  * @class cv.Image
  * @constructor
  * @param {string | Object} src url | canvas | context | img.
+ * @param {Object} option
+ *          {
+ *              width: 100, // only work when using url, img
+ *              height: 100 // same as `width`
+ *          }
+ *          .
  */
-var CVImage = cv.Image = function(src) {
+var CVImage = cv.Image = function(src, option) {
     var me = this;
     if (typeof src === 'string') {
         CVImage._loadFromUrl(src, function(img) {
-            var cvImg = new CVImage(img);
+            var cvImg = new CVImage(img, option);
             me._imageData = cvImg._imageData;
             me._doLoadCallback();
         });
@@ -39,11 +45,21 @@ var CVImage = cv.Image = function(src) {
                 ctx = src.getContext('2d');
             // img element object
             } else if (name === 'img') {
+                // set width and height
+                if (option && option.width) {
+                    src.width = option.width;
+                }
+                if (option && option.height) {
+                    src.height = option.height;
+                }
+
                 cvs = document.createElement('canvas');
-                cvs.width = src.width;
-                cvs.height = src.height;
+                var width = src.width,
+                    height = src.height;
+                cvs.width = width;
+                cvs.height = height;
                 ctx = cvs.getContext('2d');
-                ctx.drawImage(src, 0, 0);
+                ctx.drawImage(src, 0, 0, width, height);
             } else {
                 throw new Error('[cv.Image] src wasn\'t supported!');
             }

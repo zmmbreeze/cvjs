@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cvjs</title>
+    <link rel="stylesheet" href="../assets/css/all.css" />
+    <script src="../src/cv.js"></script>
+    <script src="../src/cvColor.js"></script>
+    <script src="../src/cvImage.js"></script>
+    <script src="../src/cvImage.scale.js"></script>
+</head>
+<body>
+    <div id="stage"></div>
+    <script src="../example/example.js"></script>
+    <script>
+        var cvImg = new cv.Image('../assets/scaling.png');
+        cvImg.onload(function() {
+            this.rendTo(newCanvas())
+                .scale(200)
+                .rendTo(newCanvas());
+            this.scale(200, null, 'nearest')
+                .rendTo(newCanvas());
+        });
+    </script>
+</body>
+</html>
+
+

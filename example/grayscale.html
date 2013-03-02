@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cvjs</title>
+    <link rel="stylesheet" href="../assets/css/all.css" />
+    <script src="../src/cv.js"></script>
+    <script src="../src/cvColor.js"></script>
+    <script src="../src/cvImage.js"></script>
+    <script src="../src/cvImage.grayscale.js"></script>
+</head>
+<body>
+    <div id="stage"></div>
+    <script src="../example/example.js"></script>
+    <script>
+        var cvImg = new cv.Image('../assets/demo.jpg', {
+            width: 200,
+            height: 296
+        });
+        cvImg.onload(function() {
+            this.rendTo(newCanvas());
+            this.clone()
+                .grayscale()
+                .rendTo(newCanvas());
+            this.clone()
+                .desaturate()
+                .rendTo(newCanvas());
+        });
+    </script>
+</body>
+</html>
+
